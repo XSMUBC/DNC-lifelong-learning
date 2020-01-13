@@ -1,10 +1,19 @@
 import torch
+from maindnc import *
 from torch.nn import functional as F
 import utils
 from linear_nets import MLP,fc_layer,fc_layer_split
 from replayer import Replayer
 
+import os
+#from DNCmaster.src.controller_implementations.dnc.memory import *
+#from DNCmaster.src.main_dnc import main_dnc
+
+
+
 import torch.distributions as tdist
+
+
 
 
 class AutoEncoder(Replayer):
@@ -23,6 +32,9 @@ class AutoEncoder(Replayer):
         self.fc_layers = fc_layers
         self.z_dim = z_dim
         self.fc_units = fc_units
+
+        global z
+        global zout
 
         # Weigths of different components of the loss function
         self.lamda_rcl = 1.
@@ -107,7 +119,7 @@ class AutoEncoder(Replayer):
         '''Pass latent variable activations through feedback connections, to give reconstructed image [image_recon].'''
         hD = self.fromZ(z)
         image_features = self.fcD(hD)
-        image_recon = self.to_image(image_features)
+        image_recon = self.to_image(image_features)  # reconstructure image 
         return image_recon
 
     def forward(self, x, full=False, reparameterize=True):
@@ -139,35 +151,43 @@ class AutoEncoder(Replayer):
     # xsm xsm xsm here 
 
 
-
     ##------ SAMPLE FUNCTIONS --------##
 
-    def sample(self, size, dnclen):
+    def sample(self, size, dnclen, batch_index,z0):
         '''Generate [size] samples from the model. Output is tensor (not "requiring grad"), on same device as <self>.'''
 
         # set model to eval()-mode
         mode = self.training
         self.eval()
-        '''
+       
         # sample z  xsm xsm xsm 
 
         if dnclen:  # a new form of gaussian distribution:more accurate, more sharp, faster
 
-            #z =torch.fmod(torch.randn(size, self.z_dim),120).to(self._device())
-
-            n = tdist.Normal(0,1.6)
-
-            #z =torch.fmod(n.sample(size, self.z_dim),120).to(self._device())
-            z =n.sample((size, self.z_dim)).to(self._device())
-
+            #n = tdist.Normal(0,1.6)
+            #z =n.sample((size, self.z_dim)).to(self._device())
+	        z=maindnc(self, size, batch_index,z0)     
+   
+         
+	
         else:
 	        z = torch.randn(size, self.z_dim).to(self._device())
-        '''
+       
         # xsm xsm storage the z vectors
-        print('self.z_dim',self.z_dim)
 
-        z = torch.randn(size, self.z_dim).to(self._device())
-        print('zzzzz',z)
+        #print('self.z_dim',self.z_dim)
+
+        #z = torch.randn(size, self.z_dim).to(self._device())
+        #zzz = torch.randn(size, self.z_dim)
+
+        #print('xsm size',size)
+        #print('xsm self.z_dim',self.z_dim)
+        #print('xsm z',z)
+        #print(z.shape())
+        #print('xsm zzz',zzz)
+        #print(zzz.shape())
+        #print('xsm self_device',self._device())
+        #print(self._device().shape())
 
         # decode z into image X
         with torch.no_grad():

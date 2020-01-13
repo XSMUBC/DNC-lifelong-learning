@@ -12,7 +12,7 @@ from jsonmerge import merge
 
 
 
-def train_cl(model, train_datasets, replay_mode="none", dnclen=None, scenario="class",classes_per_task=None,iters=2000,batch_size=32,
+def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.tensor([]), scenario="class",classes_per_task=None,iters=2000,batch_size=32,
              generator=None, gen_iters=0, gen_loss_cbs=list(), loss_cbs=list(), eval_cbs=list(), sample_cbs=list(),
              use_exemplars=True, add_exemplars=False, eval_cbs_exemplars=list()):
     '''Train a model (with a "train_a_batch" method) on multiple tasks, with replay-strategy specified by [replay_mode].
@@ -112,6 +112,9 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, scenario="c
 
         # Loop over all iterations  ## xsm 
         iters_to_use = iters if (generator is None) else max(iters, gen_iters)
+        
+
+        z0=torch.load('dnc.pt')
         for batch_index in range(1, iters_to_use+1):
 
             # Update # iters left on current data-loader(s) and, if needed, create new one(s)
@@ -149,7 +152,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, scenario="c
             if replay_mode=="offline" and scenario=="task":
                 x = y = scores = None
             else:
-                x, y = next(data_loader)                                    #--> sample training data of current task
+                x, y = next(data_loader)    # xsm                                #--> sample training data of current task
                 y = y-classes_per_task*(task-1) if scenario=="task" else y  #--> ITL: adjust y-targets to 'active range'
                 x, y = x.to(device), y.to(device)                           #--> transfer them to correct device
                 # If --bce, --bce-distill & scenario=="class", calculate scores of current batch with previous model
@@ -170,7 +173,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, scenario="c
                 scores_ = None
                 if scenario in ("domain", "class"):
                     # Sample replayed training data, move to correct device
-                    x_, y_ = next(data_loader_previous)
+                    x_, y_ = next(data_loader_previous) # xsm 
                     x_ = x_.to(device)
                     y_ = y_.to(device) if (model.replay_targets=="hard") else None
                     # If required, get target scores (i.e, [scores_]         -- using previous model, with no_grad()
@@ -185,7 +188,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, scenario="c
                     y_ = list()
                     up_to_task = task if replay_mode=="offline" else task-1
                     for task_id in range(up_to_task):
-                        x_temp, y_temp = next(data_loader_previous[task_id])
+                        x_temp, y_temp = next(data_loader_previous[task_id])  # xsm
                         x_.append(x_temp.to(device))
                         # -only keep [y_] if required (as otherwise unnecessary computations will be done)
                         if model.replay_targets=="hard":
@@ -204,8 +207,11 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, scenario="c
 
             ##-->> Generative / Current Replay <<--##
             if Generative or Current:
+
+
                 # Get replayed data (i.e., [x_]) -- either current data or use previous generator
-                x_ = x if Current else previous_generator.sample(batch_size,dnclen)
+                x_ = x if Current else previous_generator.sample(batch_size,dnclen,batch_index,z0)
+
 
                 # Get target scores and labels (i.e., [scores_] / [y_]) -- using previous model, with no_grad()
                 # -if there are no task-specific mask, obtain all predicted scores at once

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import torch
 import argparse
 import os
 import numpy as np
@@ -70,6 +71,19 @@ eval_params.add_argument('--pdf', action='store_true', help="generate pdfs for i
 eval_params.add_argument('--visdom', action='store_true', help="use visdom for on-the-fly plots")
 eval_params.add_argument('--prec-n', type=int, default=1024, help="# samples for evaluating solver's precision")
 eval_params.add_argument('--sample-n', type=int, default=64, help="# images to show")
+
+
+
+import glob
+import os
+filelist=glob.glob("/home/sx47/sda1/xsm/Lifelong learning/Lifelong learning_DNC2/results/*.txt")
+for file in filelist:
+  os.remove(file)
+
+filelist=glob.glob("/home/sx47/sda1/xsm/Lifelong learning/Lifelong learning_DNC2/results/*.pkl")
+for file in filelist:
+  os.remove(file)
+
 
 
 # xsm xsm xsm command run method
@@ -155,6 +169,10 @@ if __name__ == '__main__':
     args.si = False
     args.gating_prop = 0.
     # args.seed could of course also vary!
+
+    abc=torch.tensor([])
+    z0=torch.tensor([])
+    torch.save(abc, 'dnc.pt')
 
     #-------------------------------------------------------------------------------------------------#
 

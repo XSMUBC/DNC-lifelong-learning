@@ -52,6 +52,8 @@ model_params.add_argument('--singlehead', action='store_true', help="for Task-IL
 # training hyperparameters / initialization
 train_params = parser.add_argument_group('Training Parameters')
 train_params.add_argument('--iters', type=int, default=2000, help="# batches to optimize solver")
+
+#train_params.add_argument('--iters', type=int, default=20, help="# batches to optimize solver")
 train_params.add_argument('--lr', type=float, default=0.001, help="learning rate")
 train_params.add_argument('--batch', type=int, default=128, help="batch-size")
 train_params.add_argument('--optimizer', type=str, choices=['adam', 'adam_reset', 'sgd'], default='adam')
@@ -400,7 +402,7 @@ def run(args):
     start = time.time()
     # Train model  #xsm xsm 
     train_cl(
-        model, train_datasets, replay_mode=args.replay, dnclen=args.dnc, scenario=scenario, classes_per_task=classes_per_task,
+        model, train_datasets, replay_mode=args.replay, dnclen=args.dnc, z0=torch.tensor([]), scenario=scenario, classes_per_task=classes_per_task,
         iters=args.iters, batch_size=args.batch,
         generator=generator, gen_iters=args.g_iters, gen_loss_cbs=generator_loss_cbs,
         sample_cbs=sample_cbs, eval_cbs=eval_cbs, loss_cbs=generator_loss_cbs if args.feedback else solver_loss_cbs,

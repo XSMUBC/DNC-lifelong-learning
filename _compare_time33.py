@@ -7,7 +7,7 @@ from param_stamp import get_param_stamp_from_args
 import visual_plt
 import main
 
-
+import torch
 
 
 
@@ -16,12 +16,13 @@ import main
 #from DNCmaster.src.controller_implementations.lstm import *
 
 #from DNCmaster.src.task_implementations.copy_task import *
-from DNCmaster.src.tasks import *
+
 #from DNCmaster.src.task_implementations.bAbI.bAbI import *
 #from DNCmaster.utils import project_path, init_wrapper
 
 
-
+abc=torch.tensor([])
+torch.save(abc, 'dnc.pt')
 
 
 
@@ -88,6 +89,21 @@ eval_params.add_argument('--pdf', action='store_true', help="generate pdfs for i
 eval_params.add_argument('--visdom', action='store_true', help="use visdom for on-the-fly plots")
 eval_params.add_argument('--prec-n', type=int, default=1024, help="# samples for evaluating solver's precision")
 eval_params.add_argument('--sample-n', type=int, default=64, help="# images to show")
+
+
+
+
+
+import glob
+import os
+filelist=glob.glob("/home/sx47/sda1/xsm/Lifelong learning/Lifelong learning_DNC2/results/*.txt")
+for file in filelist:
+  os.remove(file)
+
+filelist=glob.glob("/home/sx47/sda1/xsm/Lifelong learning/Lifelong learning_DNC2/results/*.pkl")
+for file in filelist:
+  os.remove(file)
+
 
 
 # xsm xsm xsm command run method
@@ -267,39 +283,7 @@ if __name__ == '__main__':
     DNCKD = collect_all(DNCKD, seed_list, args, name="DNC_RtF")
 
 
-    # xsm xsm add DNC , here define the memory size 
-    print("xsm DNC")
-
-    n_blocks = 6
-    vector_size = n_blocks + 1
-    min_seq = 5
-    train_max_seq = 6
-    n_copies = 1
-    out_vector_size = vector_size
-
-
-    class Hp:
-        """
-        Hyperparameters
-        """
-        batch_size = 4
-        steps = 1
-
-        lstm_memory_size = 128
-        n_layers = 1
-
-        stddev = 0.1
-
-        class Mem:
-            word_size = 8
-            mem_size = 10
-            num_read_heads = 1
-
-
-    controller = LSTM(task.vector_size, Hp.lstm_memory_size, Hp.n_layers, initializer=weight_initializer,initial_stddev=Hp.stddev)
-
-    print("Loaded controller")
-
+    
     
     ## xsm xsm xsm 
 
