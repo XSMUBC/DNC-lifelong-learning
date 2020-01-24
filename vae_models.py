@@ -153,7 +153,7 @@ class AutoEncoder(Replayer):
 
     ##------ SAMPLE FUNCTIONS --------##
 
-    def sample(self, size, dnclen, batch_index,z0):
+    def sample(self, size, dnclen, batch_index,z0,task,tasks):
         '''Generate [size] samples from the model. Output is tensor (not "requiring grad"), on same device as <self>.'''
 
         # set model to eval()-mode
@@ -164,30 +164,14 @@ class AutoEncoder(Replayer):
 
         if dnclen:  # a new form of gaussian distribution:more accurate, more sharp, faster
 
-            #n = tdist.Normal(0,1.6)
-            #z =n.sample((size, self.z_dim)).to(self._device())
-	        z=maindnc(self, size, batch_index,z0)     
+
+	        z=maindnc(self, size, batch_index,z0,task,tasks)     
    
          
 	
         else:
 	        z = torch.randn(size, self.z_dim).to(self._device())
        
-        # xsm xsm storage the z vectors
-
-        #print('self.z_dim',self.z_dim)
-
-        #z = torch.randn(size, self.z_dim).to(self._device())
-        #zzz = torch.randn(size, self.z_dim)
-
-        #print('xsm size',size)
-        #print('xsm self.z_dim',self.z_dim)
-        #print('xsm z',z)
-        #print(z.shape())
-        #print('xsm zzz',zzz)
-        #print(zzz.shape())
-        #print('xsm self_device',self._device())
-        #print(self._device().shape())
 
         # decode z into image X
         with torch.no_grad():
@@ -196,7 +180,7 @@ class AutoEncoder(Replayer):
         # set model back to its initial mode
         self.train(mode=mode)
 
-        # return samples as [batch_size]x[channels]x[image_size]x[image_size] tensor
+        #print ('image xsm X',X)
         return X
 
 
@@ -291,9 +275,9 @@ class AutoEncoder(Replayer):
         '''Train model for one batch ([x],[y]), possibly supplemented with replayed data ([x_],[y_]).
 
         [x]               <tensor> batch of inputs (could be None, in which case only 'replayed' data is used)
-        [y]               <tensor> batch of corresponding labels
+        [y]               <tensor> batch of corresponding labels  # xsm xsm label
         [x_]              None or (<list> of) <tensor> batch of replayed inputs
-        [y_]              None or (<list> of) <tensor> batch of corresponding "replayed" labels
+        [y_]              None or (<list> of) <tensor> batch of corresponding "replayed" labels  xsm xsm label   
         [scores_]         None or (<list> of) <tensor> 2Dtensor:[batch]x[classes] predicted "scores"/"logits" for [x_]
         [rnt]             <number> in [0,1], relative importance of new task
         [active_classes]  None or (<list> of) <list> with "active" classes'''
@@ -309,10 +293,16 @@ class AutoEncoder(Replayer):
             # If needed (e.g., Task-IL or Class-IL scenario), remove predictions for classes not in current task
             if active_classes is not None:
                 y_hat = y_hat[:, active_classes[-1]] if type(active_classes[0])==list else y_hat[:, active_classes]
+
+                #print('wdwefewf3re',y_hat)
+                #print('thtyjtyj',self(x, full=True))
             # Calculate all losses
             reconL, variatL, predL, _ = self.loss_function(recon_x=recon_batch, x=x, y_hat=y_hat,
                                                            y_target=y, mu=mu, logvar=logvar)
             # Weigh losses as requested
+
+		
+
             loss_cur = self.lamda_rcl*reconL + self.lamda_vl*variatL + self.lamda_pl*predL
 
             # Calculate training-precision
@@ -360,6 +350,7 @@ class AutoEncoder(Replayer):
                 else:
                     y_hat = y_hat_all
 
+
                 # Calculate all losses
                 reconL_r[replay_id], variatL_r[replay_id], predL_r[replay_id], distilL_r[replay_id] = self.loss_function(
                     recon_x=recon_batch, x=x_temp_, y_hat=y_hat,
@@ -374,10 +365,11 @@ class AutoEncoder(Replayer):
                 elif self.replay_targets=="soft":
                     loss_replay[replay_id] += self.lamda_pl*distilL_r[replay_id]
 
-
+    
+		
         # Calculate total loss
         loss_replay = None if (x_ is None) else sum(loss_replay)/n_replays
-        loss_total = loss_replay if (x is None) else (loss_cur if x_ is None else rnt*loss_cur+(1-rnt)*loss_replay)
+        loss_total = loss_replay if (x is None) else (loss_cur if x_ is None else rnt*loss_cur+(1-rnt)*loss_replay)  # xsm xsm
         #print("xsm xsm xsm total loss model")
 	
 

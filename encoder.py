@@ -192,7 +192,7 @@ class Classifier(ContinualLearner, Replayer, ExemplarHandler):
         # Calculate total loss #  xsm xsm 
         loss_replay = None if (x_ is None) else sum(loss_replay)/n_replays
         loss_total = loss_replay if (x is None) else (loss_cur if x_ is None else rnt*loss_cur+(1-rnt)*loss_replay)
-        print("xsm xsm xsm total loss encoder")
+        #print("xsm xsm xsm total loss encoder")
 
 
         ##--(3)-- ALLOCATION LOSSES --##

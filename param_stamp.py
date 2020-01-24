@@ -124,10 +124,12 @@ def get_param_stamp(args, model_name, verbose=True, replay=False, replay_model_n
         binLoss_stamp = '--BCE_dist' if (args.bce_distill and args.scenario=="class") else '--BCE'
 
 	# - dnc stamp
+    
     if args.dnc:
         dnc_stamp="dnc"
     else:
         dnc_stamp=""
+   
 
 
 

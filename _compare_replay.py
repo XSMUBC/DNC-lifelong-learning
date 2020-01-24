@@ -241,6 +241,14 @@ if __name__ == '__main__':
     figure_list = []
 
     # set scale of y-axis
+
+
+
+    matplotlib.rc('axes', linewidth=4)
+    matplotlib.rc('xtick', labelsize=25) 
+    matplotlib.rc('ytick', labelsize=25) 
+
+
     y_lim = [0,1] if args.scenario=="class" else None
 
     # Methods for comparison
@@ -303,7 +311,7 @@ if __name__ == '__main__':
 
     # -plot
     figure = visual_plt.plot_lines(
-        lines, x_axes=budget_list, ylabel="average precision (after all tasks)", title=title, x_log=True, ylim=y_lim,
+        lines, x_axes=budget_list, ylabel="Average precision (after all tasks)", title=title, x_log=True, ylim=y_lim,
         line_names=line_names, xlabel="Total memory budget", with_dots=True, colors=colors, list_with_errors=errors,
         h_lines=h_lines, h_errors=h_errors, h_labels=h_labels, h_colors=h_colors,
     )
