@@ -120,8 +120,6 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
         z0=torch.load('dnc.pt')
 
 
-
-
         for batch_index in range(1, iters_to_use+1):
 
             # Update # iters left on current data-loader(s) and, if needed, create new one(s)
@@ -199,6 +197,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                     # Sample replayed training data, wrap in (cuda-)Variables and store in lists
                     x_ = list()
                     y_ = list()
+
                     up_to_task = task if replay_mode=="offline" else task-1
                     for task_id in range(up_to_task):
                         x_temp, y_temp = next(data_loader_previous[task_id])  # xsm
@@ -218,6 +217,10 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                             scores_temp = scores_temp[:, (classes_per_task*task_id):(classes_per_task*(task_id+1))]
                             scores_.append(scores_temp)
 
+
+            t_label=list()  #xsm
+            t_label=y_
+
             ##-->> Generative / Current Replay <<--##
             if Generative or Current:
 
@@ -226,7 +229,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
 
 
 
-                x_ = x if Current else previous_generator.sample(batch_size,dnclen,batch_index,z0,task,len(train_datasets))  #xsm 
+                x_ = x if Current else previous_generator.sample(batch_size,dnclen,batch_index,z0,task,len(train_datasets),t_label)  #xsm 
 
 
                 # Get target scores and labels (i.e., [scores_] / [y_]) -- using previous model, with no_grad()
@@ -239,14 +242,17 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                         (not hasattr(previous_model, "mask_dict")) or (previous_model.mask_dict is None)
                 ):
                     scores_ = all_scores_[:,:(classes_per_task * (task - 1))] if scenario == "class" else all_scores_
-                    _, y_ = torch.max(scores_, dim=1)
-                    print('xsm replay_data classes_per_task 3',classes_per_task)	
+                    #, y_ = torch.max(scores_, dim=1)
 
-                    print('xsm replay_data task 3',task)
+
+                    y_=t_label
+                    #print('xsm replay_data classes_per_task 3',classes_per_task)	
+
+                    #print('xsm replay_data task 3',task)
                     #print('xsm replay_data scores_ 3',scores_)		
                     #print('xsm replay_data scores_ 3',scores_)	
-                    print('xsm replay_data labbel3',y_)	
-                    print('xsm replay_data y_.size() 3',y_.size())	
+                    #print('xsm replay_data labbel3',y_)	
+                    #print('xsm replay_data y_.size() 3',y_.size())	
 
 
 

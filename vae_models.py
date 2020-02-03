@@ -153,7 +153,7 @@ class AutoEncoder(Replayer):
 
     ##------ SAMPLE FUNCTIONS --------##
 
-    def sample(self, size, dnclen, batch_index,z0,task,tasks):
+    def sample(self, size, dnclen, batch_index,z0,task,tasks,t_label):
         '''Generate [size] samples from the model. Output is tensor (not "requiring grad"), on same device as <self>.'''
 
         # set model to eval()-mode
@@ -165,12 +165,16 @@ class AutoEncoder(Replayer):
         if dnclen:  # a new form of gaussian distribution:more accurate, more sharp, faster
 
 
-	        z=maindnc(self, size, batch_index,z0,task,tasks)     
+	        z,t_label=maindnc(self, size, batch_index,z0,task,tasks,t_label)     
    
          
 	
         else:
 	        z = torch.randn(size, self.z_dim).to(self._device())
+
+
+
+
        
 
         # decode z into image X

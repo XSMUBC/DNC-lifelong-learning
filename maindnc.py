@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 ## maindnc xsm code                                    ##
 #########################################################
 
-def maindnc(self, size, batch_index,z0,task,tasks):
+def maindnc(self, size, batch_index,z0,task,tasks,t_label):
  
     '''
     if list(z0.size())[0]!=0:
@@ -37,6 +37,8 @@ def maindnc(self, size, batch_index,z0,task,tasks):
     var=1.6
     n = tdist.Normal(mean, var)
     z1 =n.sample((size, self.z_dim)).to(self._device())
+
+    t_label =n.sample((size, self.z_dim)).to(t_label)
 
    
     if (task<=round((tasks+1)/2)):
@@ -83,7 +85,7 @@ def maindnc(self, size, batch_index,z0,task,tasks):
         torch.save(z2, 'dnc.pt')
 
 
-    return z2
+    return z2,t_label
 
 
 
