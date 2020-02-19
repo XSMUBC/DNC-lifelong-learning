@@ -3,9 +3,9 @@ import argparse
 import os
 import numpy as np
 import utils
-#from param_stamp import get_param_stamp_from_args
+from param_stamp import get_param_stamp_from_args
 import visual_plt
-#import main
+import main
 
 
 description = 'Compare performance & training time of various continual learning methods.'
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     
     ## xsm xsm xsm 
 
-    '''
+
     #-------------------------------------------------------------------------------------------------#
 
     #---------------------------#
@@ -271,7 +271,7 @@ if __name__ == '__main__':
         i = 0
         prec[seed] = [
             SO[seed][i]["average"], SN[seed][i]["average"],
-            SRKD[seed][i]["average"], SRP[seed][i]["average"], ORKD[seed][i]["average"],DNCKD[seed][i]["average"], SLWF[seed][i]["average"],
+            SRKD[seed][i]["average"], SRP[seed][i]["average"], ORKD[seed][i]["average"], DNCKD[seed][i]["average"], SLWF[seed][i]["average"],
             SEWC[seed][i]["average"], SOEWC[seed][i]["average"], SSI[seed][i]["average"],
         ]
 
@@ -285,7 +285,7 @@ if __name__ == '__main__':
         i = 2
         train_time[seed] = [
             SO[seed][i], SN[seed][i],
-            SRKD[seed][i], SRP[seed][i], ORKD[seed][i],DNCKD[seed][i], SLWF[seed][i],
+            SRKD[seed][i], SRP[seed][i], ORKD[seed][i], DNCKD[seed][i], SLWF[seed][i],
             SEWC[seed][i], SOEWC[seed][i], SSI[seed][i],
         ]
 
@@ -318,12 +318,18 @@ if __name__ == '__main__':
     names += ["EWC", "o-EWC", "SI", "LwF", "DGR", "DGR+distil", "RtF","DNC-RtF", "Offline"]
     colors += ["deepskyblue", "blue", "yellowgreen", "goldenrod", "indianred", "red", "maroon", "aqua", "black"]
 #    ids += [6,7,8,9,5,3,2,4,0]
-    ids += [7,8,9,6,3,2,5,4,0]
+    ids += [7,8,9,6,3,2,4,5,0]
 
     # open pdf
     pp = visual_plt.open_pdf("{}/{}.pdf".format(args.p_dir, plot_name))
     figure_list = []
 
+
+
+
+    #matplotlib.rc('axes', linewidth=5)
+    #matplotlib.rc('xtick', labelsize=35) 
+    #matplotlib.rc('ytick', labelsize=35) 
     # bar-plot
     means = [np.mean([ave_prec[seed][id] for seed in seed_list]) for id in ids]
     if len(seed_list)>1:
@@ -356,7 +362,7 @@ if __name__ == '__main__':
         ave_lines.append(new_ave_line)
         sem_lines.append(new_sem_line)
     figure = visual_plt.plot_lines(ave_lines, x_axes=x_axes, line_names=names, colors=colors, title=title,
-                                   xlabel="tasks", ylabel="average precision (on tasks seen so far)",
+                                   xlabel="tasks", ylabel="average precision (on tasks seen so far)", 
                                    list_with_errors=sem_lines if len(seed_list)>1 else None)
     figure_list.append(figure)
 
@@ -387,4 +393,4 @@ if __name__ == '__main__':
 
 
 
-    '''
+    

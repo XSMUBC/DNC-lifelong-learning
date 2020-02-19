@@ -145,6 +145,7 @@ DATASET_CONFIGS = {
     'mnist28': {'size': 28, 'channels': 1, 'classes': 10},
 }
 
+
 #----------------------------------------------------------------------------------------------------------#
 
 
@@ -205,11 +206,7 @@ def get_multitask_experiment(name, scenario, tasks, data_dir="./datasets", only_
                     lambda y, x=labels[0]: y - x
                 ) if scenario=='domain' else None
                 train_datasets.append(SubDataset(mnist_train, labels, target_transform=target_transform))
-                #print('xsm original training data and labels', mnist_train, labels)
-		
                 test_datasets.append(SubDataset(mnist_test, labels, target_transform=target_transform))
-
-
     else:
         raise RuntimeError('Given undefined experiment: {}'.format(name))
 

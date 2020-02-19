@@ -10,11 +10,9 @@ from data import SubDataset, ExemplarDataset
 from continual_learner import ContinualLearner
 from jsonmerge import merge
 
-import glob
-import os
 
 
-def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.tensor([]), scenario="class",classes_per_task=None,iters=2000,batch_size=32,
+def train_cl(model, train_datasets, replay_mode="none", dnclen=None, scenario="class",classes_per_task=None,iters=2000,batch_size=32,
              generator=None, gen_iters=0, gen_loss_cbs=list(), loss_cbs=list(), eval_cbs=list(), sample_cbs=list(),
              use_exemplars=True, add_exemplars=False, eval_cbs_exemplars=list()):
     '''Train a model (with a "train_a_batch" method) on multiple tasks, with replay-strategy specified by [replay_mode].
@@ -50,7 +48,6 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
 
     # Loop over all tasks.     ## xsm xsm trainning tasks 
     for task, train_dataset in enumerate(train_datasets, 1):
-        #print('xsm task',task)
 
         # If offline replay-setting, create large database of all tasks so far
         if replay_mode=="offline" and (not scenario=="task"):
@@ -66,7 +63,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
             if len(train_datasets)>6:
                 target_transform = (lambda y, x=classes_per_task: torch.tensor(y%x)) if (
                         scenario=="domain"
-                ) else (lambda y: torch.tensor(y))  # xsm
+                ) else (lambda y: torch.tensor(y))
             else:
                 target_transform = (lambda y, x=classes_per_task: y%x) if scenario=="domain" else None
             # ---------------------------------------------------------------------------------------------------- #
@@ -115,11 +112,6 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
 
         # Loop over all iterations  ## xsm 
         iters_to_use = iters if (generator is None) else max(iters, gen_iters)
-        
-
-        z0=torch.load('dnc.pt')
-
-
         for batch_index in range(1, iters_to_use+1):
 
             # Update # iters left on current data-loader(s) and, if needed, create new one(s)
@@ -157,9 +149,9 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
             if replay_mode=="offline" and scenario=="task":
                 x = y = scores = None
             else:
-                x, y = next(data_loader)    # xsm                                #--> sample training data of current task # xsm xsm current_data
-                y = y-classes_per_task*(task-1) if scenario=="task" else y  #--> ITL: adjust y-targets to 'active range' # xsm xsm got the label
-                x, y = x.to(device), y.to(device)                           #--> transfer them to correct device  # xsm xsm 
+                x, y = next(data_loader)                                    #--> sample training data of current task
+                y = y-classes_per_task*(task-1) if scenario=="task" else y  #--> ITL: adjust y-targets to 'active range'
+                x, y = x.to(device), y.to(device)                           #--> transfer them to correct device
                 # If --bce, --bce-distill & scenario=="class", calculate scores of current batch with previous model
                 binary_distillation = hasattr(model, "binaryCE") and model.binaryCE and model.binaryCE_distill
                 if binary_distillation and scenario=="class" and (previous_model is not None):
@@ -172,21 +164,15 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
             #####-----REPLAYED BATCH-----#####
             if not Exact and not Generative and not Current:
                 x_ = y_ = scores_ = None   #-> if no replay
-                #print('xsm replay_data labbel1',y_)	
 
             ##-->> Exact Replay <<--##
             if Exact:
                 scores_ = None
                 if scenario in ("domain", "class"):
                     # Sample replayed training data, move to correct device
-                    x_, y_ = next(data_loader_previous) # xsm 
+                    x_, y_ = next(data_loader_previous)
                     x_ = x_.to(device)
                     y_ = y_.to(device) if (model.replay_targets=="hard") else None
-
-
-                    #print('xsm replay_data labbel2',y_)	
-
-
                     # If required, get target scores (i.e, [scores_]         -- using previous model, with no_grad()
                     if (model.replay_targets=="soft"):
                         with torch.no_grad():
@@ -197,10 +183,9 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                     # Sample replayed training data, wrap in (cuda-)Variables and store in lists
                     x_ = list()
                     y_ = list()
-
                     up_to_task = task if replay_mode=="offline" else task-1
                     for task_id in range(up_to_task):
-                        x_temp, y_temp = next(data_loader_previous[task_id])  # xsm
+                        x_temp, y_temp = next(data_loader_previous[task_id])
                         x_.append(x_temp.to(device))
                         # -only keep [y_] if required (as otherwise unnecessary computations will be done)
                         if model.replay_targets=="hard":
@@ -217,20 +202,10 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                             scores_temp = scores_temp[:, (classes_per_task*task_id):(classes_per_task*(task_id+1))]
                             scores_.append(scores_temp)
 
-
-            t_label=list()  #xsm
-            t_label=y_
-
             ##-->> Generative / Current Replay <<--##
             if Generative or Current:
-
-
                 # Get replayed data (i.e., [x_]) -- either current data or use previous generator
-
-
-
-                x_ = x if Current else previous_generator.sample(batch_size,dnclen,batch_index,z0,task,len(train_datasets),t_label)  #xsm 
-
+                x_ = x if Current else previous_generator.sample(batch_size,dnclen)
 
                 # Get target scores and labels (i.e., [scores_] / [y_]) -- using previous model, with no_grad()
                 # -if there are no task-specific mask, obtain all predicted scores at once
@@ -242,21 +217,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                         (not hasattr(previous_model, "mask_dict")) or (previous_model.mask_dict is None)
                 ):
                     scores_ = all_scores_[:,:(classes_per_task * (task - 1))] if scenario == "class" else all_scores_
-                    #, y_ = torch.max(scores_, dim=1)
-
-
-                    y_=t_label
-                    #print('xsm replay_data classes_per_task 3',classes_per_task)	
-
-                    #print('xsm replay_data task 3',task)
-                    #print('xsm replay_data scores_ 3',scores_)		
-                    #print('xsm replay_data scores_ 3',scores_)	
-                    #print('xsm replay_data labbel3',y_)	
-                    #print('xsm replay_data y_.size() 3',y_.size())	
-
-
-
-
+                    _, y_ = torch.max(scores_, dim=1)
                 else:
                     # NOTE: it's possible to have scenario=domain with task-mask (so actually it's the Task-IL scenario)
                     # -[x_] needs to be evaluated according to each previous task, so make list with entry per task
@@ -276,17 +237,10 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                         _, temp_y_ = torch.max(temp_scores_, dim=1)
                         scores_.append(temp_scores_)
                         y_.append(temp_y_)
-                        #print('xsm replay_data labbel4',y_)	
 
                 # Only keep predicted y/scores if required (as otherwise unnecessary computations will be done)
                 y_ = y_ if (model.replay_targets == "hard") else None
                 scores_ = scores_ if (model.replay_targets == "soft") else None
-                #print('xsm replay_data labbel5',y_)	
-
-
-
-
-
 
 
 
@@ -304,10 +258,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                     
                     #loss_dict = model.train_a_batch(x, y, x_=x_, y_=y_, scores=scores, scores_=scores_,
                                                     #active_classes=active_classes, task=task, rnt = 1./task)
-
-
-
-                    #print('xsm replay_data labbel6',y_)	
+                    
                     # Update running parameter importance estimates in W
                     if isinstance(model, ContinualLearner) and (model.si_c>0):
                         for n, p in model.named_parameters():
@@ -331,6 +282,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                                 sample_cb(model, batch_index, task=task)
 
 
+
                 #---> Train GENERATOR
                 if generator is not None and batch_index <= gen_iters:
 
@@ -338,7 +290,7 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                     loss_dict = generator.train_a_batch(x, y, x_=x_, y_=y_, scores_=scores_, active_classes=active_classes,
                                                         task=task, rnt=1./task)
 
-                    #print('xsm replay_data labbel7',y_)	
+                    
                   
 
                     # Fire callbacks on each iteration
@@ -357,11 +309,10 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                 if batch_index <= iters:
 
                     # Train the main model with this batch
-                    print('xsm replay_data labbel8',y_)
                     loss_dict = model.train_a_batch(x, y, x_=x_, y_=y_, scores=scores, scores_=scores_,
                                                     active_classes=active_classes, task=task, rnt = 1./task)
                     
-	
+                    
                     
                     # Update running parameter importance estimates in W
                     if isinstance(model, ContinualLearner) and (model.si_c>0):
@@ -389,12 +340,11 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                 if generator is not None and batch_index <= gen_iters:
 
                     # Train the generator with this batch
-                    print('xsm replay_data labbel9',y_)	
                     loss_dict = generator.train_a_batch(x, y, x_=x_, y_=y_, scores_=scores_, active_classes=active_classes,
                                                         task=task, rnt=1./task)
-                
+                  
                     
-
+                    
                     # Fire callbacks on each iteration
                     for loss_cb in gen_loss_cbs:
                         if loss_cb is not None:
@@ -404,10 +354,8 @@ def train_cl(model, train_datasets, replay_mode="none", dnclen=None, z0=torch.te
                             sample_cb(generator, batch_index, task=task)
 
 
-	    #xsm show data and label
 
 
-                #print('xsm replay_data labbel10',y_)	
 
 
 

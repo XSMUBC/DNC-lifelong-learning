@@ -26,24 +26,11 @@ def plot_images_from_tensor(image_tensor, pdf=None, nrow=8, title=None):
         pdf.savefig()
 
 
-
-
-
-
-
-
-
-
-
 def plot_scatter_groups(x, y, colors=None, ylabel=None, xlabel=None, title=None, top_title=None, names=None,
                         xlim=None, ylim=None, markers=None, figsize=None):
     '''Generate a figure containing a scatter-plot.'''
 
     # if needed, generate default group-names
-
-    matplotlib.rc('axes', linewidth=5)
-    matplotlib.rc('xtick', labelsize=35) 
-    matplotlib.rc('ytick', labelsize=35)
     if names == None:
         n_groups = len(y)
         names = ["group " + str(id) for id in range(n_groups)]
@@ -56,24 +43,22 @@ def plot_scatter_groups(x, y, colors=None, ylabel=None, xlabel=None, title=None,
                       marker="o" if markers is None else markers[i], s=40, alpha=0.5)
         # plot group means
         axarr.scatter(x=np.mean(x[i]), y=np.mean(y[i]), color=None if (colors is None) else colors[i], label=name,
-                      marker="*" if markers is None else markers[i], s=380)
+                      marker="*" if markers is None else markers[i], s=160)
 
     # finish layout
     # -set y/x-axis
-
-
     if ylim is not None:
         axarr.set_ylim(ylim)
     if xlim is not None:
         axarr.set_xlim(xlim)
     # -add axis-labels
     if xlabel is not None:
-        axarr.set_xlabel(xlabel,fontsize=35)
+        axarr.set_xlabel(xlabel)
     if ylabel is not None:
-        axarr.set_ylabel(ylabel,fontsize=35)
+        axarr.set_ylabel(ylabel)
     # -add title(s)
-    #if title is not None:
-        #axarr.set_title(title,fontsize=35)
+    if title is not None:
+        axarr.set_title(title)
     if top_title is not None:
         f.suptitle(top_title)
     # -add legend
@@ -88,12 +73,6 @@ def plot_bar(numbers, names=None, colors=None, ylabel=None, title=None, top_titl
              yerr=None):
     '''Generate a figure containing a bar-graph.'''
 
-
-
-
-    matplotlib.rc('axes', linewidth=5)
-    matplotlib.rc('xtick', labelsize=15) 
-    matplotlib.rc('ytick', labelsize=20) 
     # number of bars
     n_bars = len(numbers)
 
@@ -103,15 +82,12 @@ def plot_bar(numbers, names=None, colors=None, ylabel=None, title=None, top_titl
     axarr.bar(x=range(n_bars), height=numbers, color=colors, yerr=yerr)
 
     # finish layout
-
-
-
     axarr.set_xticks(range(n_bars))
     if names is not None:
         axarr.set_xticklabels(names, rotation=-20)
         axarr.legend()
     if ylabel is not None:
-        axarr.set_ylabel(ylabel,fontsize=25)
+        axarr.set_ylabel(ylabel)
     if title is not None:
         axarr.set_title(title)
     if top_title is not None:
@@ -119,10 +95,6 @@ def plot_bar(numbers, names=None, colors=None, ylabel=None, title=None, top_titl
     # -set y-axis
     if ylim is not None:
         axarr.set_ylim(ylim)
-
-    #matplotlib.pyplot.text(8, 8, "text on plot")
-
-  
 
     # return the figure
     return f
@@ -142,11 +114,6 @@ def plot_lines(list_with_lines, x_axes=None, line_names=None, colors=None, title
     :param title_top:       <str> text to appear on top of the title
     :return: f:             <figure>
     '''
-
-
-    matplotlib.rc('axes', linewidth=5)
-    matplotlib.rc('xtick', labelsize=25) 
-    matplotlib.rc('ytick', labelsize=25)
 
     # if needed, generate default x-axis
     if x_axes == None:
@@ -171,15 +138,15 @@ def plot_lines(list_with_lines, x_axes=None, line_names=None, colors=None, title
                                    color=None if (colors is None) else colors[task_id], alpha=0.25)
             else:
                 axarr.plot(x_axes, list(np.array(list_with_lines[task_id]) + np.array(list_with_errors[task_id])), label=None,
-                           color=None if (colors is None) else colors[task_id], linewidth=3, linestyle='dashed')
+                           color=None if (colors is None) else colors[task_id], linewidth=1, linestyle='dashed')
                 axarr.plot(x_axes, list(np.array(list_with_lines[task_id]) - np.array(list_with_errors[task_id])), label=None,
-                           color=None if (colors is None) else colors[task_id], linewidth=3, linestyle='dashed')
+                           color=None if (colors is None) else colors[task_id], linewidth=1, linestyle='dashed')
 
     # mean lines
     for task_id, name in enumerate(line_names):
         axarr.plot(x_axes, list_with_lines[task_id], label=name,
                    color=None if (colors is None) else colors[task_id],
-                   linewidth=3, marker='o' if with_dots else None)
+                   linewidth=2, marker='o' if with_dots else None)
 
     # add horizontal line
     if h_line is not None:
@@ -190,8 +157,8 @@ def plot_lines(list_with_lines, x_axes=None, line_names=None, colors=None, title
                                    [h_line + h_error, h_line + h_error], [h_line - h_error, h_line - h_error],
                                    color="grey", alpha=0.25)
             else:
-                axarr.axhline(y=h_line + h_error, label=None, color="grey", linewidth=3, linestyle='dashed')
-                axarr.axhline(y=h_line - h_error, label=None, color="grey", linewidth=3, linestyle='dashed')
+                axarr.axhline(y=h_line + h_error, label=None, color="grey", linewidth=1, linestyle='dashed')
+                axarr.axhline(y=h_line - h_error, label=None, color="grey", linewidth=1, linestyle='dashed')
 
     # add horizontal lines
     if h_lines is not None:
@@ -207,10 +174,10 @@ def plot_lines(list_with_lines, x_axes=None, line_names=None, colors=None, title
                                        color=None if (h_colors is None) else h_colors[task_id], alpha=0.25)
                 else:
                     axarr.axhline(y=new_h_line+h_errors[task_id], label=None,
-                                  color=None if (h_colors is None) else h_colors[task_id], linewidth=3,
+                                  color=None if (h_colors is None) else h_colors[task_id], linewidth=1,
                                   linestyle='dashed')
                     axarr.axhline(y=new_h_line-h_errors[task_id], label=None,
-                                  color=None if (h_colors is None) else h_colors[task_id], linewidth=3,
+                                  color=None if (h_colors is None) else h_colors[task_id], linewidth=1,
                                   linestyle='dashed')
 
     # finish layout
@@ -219,12 +186,12 @@ def plot_lines(list_with_lines, x_axes=None, line_names=None, colors=None, title
         axarr.set_ylim(ylim)
     # -add axis-labels
     if xlabel is not None:
-        axarr.set_xlabel(xlabel,fontsize=25)
+        axarr.set_xlabel(xlabel)
     if ylabel is not None:
-        axarr.set_ylabel(ylabel,fontsize=25)
+        axarr.set_ylabel(ylabel)
     # -add title(s)
-    #if title is not None:
-        #axarr.set_title(title)
+    if title is not None:
+        axarr.set_title(title)
     if title_top is not None:
         f.suptitle(title_top)
     # -add legend
@@ -248,8 +215,6 @@ def plot_bars(number_list, names=None, colors=None, ylabel=None, title_list=None
     [colors]        <list> (with <lists>) of colors'''
 
     # number of plots
-
-
     n_plots = len(number_list)
 
     # number of bars per plot
@@ -265,11 +230,6 @@ def plot_bars(number_list, names=None, colors=None, ylabel=None, title_list=None
     f, axarr = plt.subplots(1, n_plots, figsize=size)
 
     # make all plots
-
-
-
-
-
     for i in range(n_plots):
         axarr[i].bar(x=range(n_bars[i]), height=number_list[i], color=colors[i] if type(colors[0])==list else colors,
                      yerr=yerr[i] if yerr is not None else None)
@@ -284,7 +244,7 @@ def plot_bars(number_list, names=None, colors=None, ylabel=None, title_list=None
             axarr[i].set_xticklabels(names[i] if type(names[0])==list else names, rotation=-20)
             axarr[i].legend()
         if i==0 and ylabel is not None:
-            axarr[i].set_ylabel(ylabel,fontsize=25)
+            axarr[i].set_ylabel(ylabel)
         if title_list is not None:
             axarr[i].set_title(title_list[i])
 
